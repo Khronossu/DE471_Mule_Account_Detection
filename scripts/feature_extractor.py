@@ -4,8 +4,8 @@ from datetime import timedelta
 import os # Added for directory management
 
 # Configuration
-INPUT_FILE = 'data/synthetic_fraud_dataset_before_feature_extraction.xlsx'
-OUTPUT_FILE = 'data/mule_account_with_features.xlsx'
+INPUT_FILE = 'data_ver2/ver_2_data.xlsx'
+OUTPUT_FILE = 'data_ver2/ver_2_data_with_features.xlsx'
 
 def engineer_features(df_tx, df_acc):
     print("Initializing state dictionaries...")
@@ -116,10 +116,23 @@ def engineer_features(df_tx, df_acc):
     
     # Daily Tx Count (Rolling 24h count per sender)
     df_indexed = df_tx.set_index('transaction_timestamp')
-    rolling_counts = df_indexed.groupby('sender_account_id')['transaction_id'].rolling('24h').count().reset_index()
-    # Merge back keeping original order
-    df_tx = pd.merge(df_tx, rolling_counts, on=['sender_account_id', 'transaction_timestamp'], how='left')
+    rolling_counts_24h = df_indexed.groupby('sender_account_id')['transaction_id'].rolling('24h').count().reset_index()
+    df_tx = pd.merge(df_tx, rolling_counts_24h, on=['sender_account_id', 'transaction_timestamp'], how='left')
     df_tx.rename(columns={'transaction_id_y': 'daily_tx_count_sender', 'transaction_id_x': 'transaction_id'}, inplace=True)
+
+    # Burst Score — rolling 1h count per sender (detects sudden transfer bursts, e.g. Hop 2 split-transfers)
+    rolling_counts_1h = df_indexed.groupby('sender_account_id')['transaction_id'].rolling('1h').count().reset_index()
+    df_tx = pd.merge(df_tx, rolling_counts_1h, on=['sender_account_id', 'transaction_timestamp'], how='left')
+    df_tx.rename(columns={'transaction_id_y': 'burst_score', 'transaction_id_x': 'transaction_id'}, inplace=True)
+    df_tx['burst_score'] = df_tx['burst_score'].fillna(1).astype(int)
+
+    # Account Age (days) at the moment of transaction — critical Burner indicator
+    acc_creation = dict(zip(df_acc['account_id'], pd.to_datetime(df_acc['account_creation_date'])))
+    df_tx['account_age_days'] = df_tx.apply(
+        lambda r: (r['transaction_timestamp'] - acc_creation[r['sender_account_id']]).days
+        if r['sender_account_id'] in acc_creation else -1,
+        axis=1
+    )
     
     # Amount Z-Score (Deviation from the sender's expanding historical mean)
     # Using expanding() ensures we only look at past transactions, avoiding data leakage from the future
@@ -155,5 +168,5 @@ if __name__ == "__main__":
     df_model_ready.to_excel(OUTPUT_FILE, index=False) # Changed from .to_csv to .to_excel
     
     print("\n--- Data Pipeline Complete. Sample of new features ---")
-    columns_to_show = ['amount', 'is_mule_tx', 'time_since_last_tx_seconds', 'dwell_time_minutes', 'in_out_ratio_7d', 'amount_z_score']
+    columns_to_show = ['amount', 'is_mule_tx', 'dwell_time_minutes', 'in_out_ratio_7d', 'burst_score', 'account_age_days', 'amount_z_score']
     print(df_model_ready[columns_to_show].tail(10))

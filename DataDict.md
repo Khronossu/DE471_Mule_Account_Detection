@@ -56,4 +56,6 @@
 | `is_first_time_payee` | Boolean | Has sender ever paid this receiver before? | High correlation with burner accounts. |
 | `in_out_ratio_7d` | Float | Ratio of credits/debits over the last 7 days. | Approaches `1.0` for pass-through mules. |
 | `daily_tx_count_sender` | Integer | Outgoing transaction count in the last 24h. | Rolling count to detect sudden spikes. |
-| `amount_z_score` | Float | How unusual the amount is vs sender's history. | Calculated via expanding mean/std. |
+| `burst_score` | Integer | Outgoing transaction count in the last 1 hour. | Short-window burst indicator — flags Hop 2 split-transfers in mule rings. |
+| `account_age_days` | Integer | Age of the sender's account (in days) at the time of this transaction. | Burner indicator: freshly opened accounts transacting large sums are suspicious. |
+| `amount_z_score` | Float | How unusual the amount is vs sender's history. | Calculated via expanding mean/std. `Z = (amount − μ_past) / σ_past`. `|Z|>2` = statistically unusual. |
