@@ -229,6 +229,8 @@ flagged = df[
 
 Reproducible end-to-end in [`notebooks/sanity_checks.ipynb`](notebooks/sanity_checks.ipynb).
 
+> 📑 **Slide deck:** the full presentation walkthrough is in [`docs/DE471_final_presentation.pdf`](docs/DE471_final_presentation.pdf).
+
 ### Recommendation to the bank
 
 1. **Implement the composite rule as a real-time hold** at the API channel for any transfer where the *receiver* is < 30 days old AND the *sender's* `burst_score ≥ 2` in the prior hour. Customer impact is minimal because legitimate customers rarely make ≥ 2 first-time transfers to a brand-new account inside one hour.
