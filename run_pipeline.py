@@ -1,9 +1,10 @@
 """
 Reproducible pipeline runner.
 
-Executes the two stages in order from the project root:
-  1. scripts/mule_acc_data_gen.py     -> data_ver2/ver_2_data.xlsx
-  2. scripts/feature_extractor.py     -> data_ver2/ver_2_data_with_features.xlsx
+Executes all three stages in order from the project root:
+  1. scripts/01_generate_data.py      -> data/raw/star_schema.xlsx
+  2. scripts/02_extract_features.py   -> data/processed/transactions_with_features.xlsx
+  3. scripts/03_build_obt.py          -> data/final/obt_final.xlsx
 
 Seeds are fixed inside each script, so running this always produces identical output.
 
@@ -16,8 +17,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 STAGES = [
-    ROOT / "scripts" / "mule_acc_data_gen.py",
-    ROOT / "scripts" / "feature_extractor.py",
+    ROOT / "scripts" / "01_generate_data.py",
+    ROOT / "scripts" / "02_extract_features.py",
+    ROOT / "scripts" / "03_build_obt.py",
 ]
 
 
@@ -31,7 +33,7 @@ def main() -> int:
         if result.returncode != 0:
             print(f"Stage failed: {script.name} (exit {result.returncode})")
             return result.returncode
-    print("\nPipeline complete. Output written to data_ver2/")
+    print("\nPipeline complete. Output written to data/final/obt_final.xlsx")
     return 0
 
 
