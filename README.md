@@ -247,4 +247,9 @@ Reproducible end-to-end in [`notebooks/sanity_checks.ipynb`](notebooks/sanity_ch
 
 ## 10. Team
 
-DE471 — Final Submission, Semester 2 / 2025–2026.
+DE471 — Final Submission, Semester 2 / 2025.
+
+Members:
+66102010179 Pasuwat
+66102010250 Purin
+66102010250 Rattanin
